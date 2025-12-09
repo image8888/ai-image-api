@@ -1,5 +1,6 @@
 __pycache__
 *.pyc
-.env
-*.key
-secret.txt
+*.env
+config.json
+*.db
+.DS_Store
