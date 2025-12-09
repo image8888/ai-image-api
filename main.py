@@ -81,4 +81,12 @@ async def check_credits(req: Request):
 @app.get("/health")
 async def health():
     return {"status": "ok", "time": datetime.now().isoformat()}
+@app.get("/")
+def home():
+    return {
+        "message": "AI 生图 API 服务已上线！",
+        "docs": "/docs",
+        "status": "ok"
+    }
+
 
