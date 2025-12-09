@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>ArtFlow AI 生图服务</title>
+  <title>AI-Image API 在线生成</title>
   <style>
     body { font-family: "Microsoft YaHei", sans-serif; padding: 20px; background: #f5f5f5; }
     .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -17,13 +17,20 @@
     .result { margin-top: 20px; text-align: center; }
     .result img { max-width: 100%; border: 1px solid #eee; border-radius: 5px; }
     .loading { color: #007BFF; font-style: italic; }
+    .notice {
+      background: #fff3cd; padding: 10px; border-radius: 5px; color: #856404; font-size: 14px; margin: 20px 0;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>🎨 ArtFlow AI 生图平台</h1>
+  <h1>🎨 AI-Image API 图文生成平台</h1>
   <p style="text-align:center;color:#666;">输入提示词 + 图片链接，一键生成高质量图像</p>
+
+  <!-- 新增：API Key 输入框 -->
+  <label>🔑 请输入你的密钥：</label>
+  <input type="text" id="apiKey" placeholder="例如：user-pro-abc123" />
 
   <label>图片链接（必须可访问）：</label>
   <input type="url" id="imageUrl" placeholder="https://cdn.pixabay.com/photo/xxx.jpg" />
@@ -33,17 +40,27 @@
 
   <button onclick="generate()">👉 开始生成</button>
 
-  <div id="loading" class="loading" style="display:none;">⏳ 正在生成，请稍候...</div>
+  <div class="loading" id="loading" style="display:none;">⏳ 正在生成，请稍候...</div>
   <div id="result" class="result"></div>
+
+  <!-- 使用说明 -->
+  <div class="notice">
+    💡 提示：未购买用户请先私聊获取密钥。付费用户支持无限调用、优先生成。
+  </div>
 </div>
 
 <script>
   async function generate() {
+    const apiKey = document.getElementById("apiKey").value.trim();
     const imageUrl = document.getElementById("imageUrl").value.trim();
     const prompt = document.getElementById("prompt").value.trim();
     const resultDiv = document.getElementById("result");
     const loadingDiv = document.getElementById("loading");
 
+    if (!apiKey) {
+      alert("请先输入你的密钥！");
+      return;
+    }
     if (!imageUrl || !prompt) {
       alert("请填写图片链接和提示词！");
       return;
@@ -57,7 +74,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": "user-test123"
+          "X-API-Key": apiKey  // ✅ 现在使用用户输入的 Key
         },
         body: JSON.stringify({ prompt, image_url: imageUrl, size: "2K" })
       });
