@@ -1,7 +1,8 @@
-# main.py - 即梦AI生图代理API（安全版，支持环境变量）
+# main.py - 即梦AI生图代理API（最终安全版）
 from fastapi import FastAPI, Request, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.security import APIKeyHeader
+from fastapi.middleware.cors import CORSMiddleware  # 用于解决跨域问题
 import httpx
 import os
 from datetime import datetime
@@ -11,6 +12,16 @@ app = FastAPI(
     description="基于即梦AI（api.apicore.ai）的图文生成接口代理",
     version="1.0"
 )
+
+# ==================== 添加 CORS 支持（关键！允许前端网页访问）====================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://wacxy888888-cyber.github.io"],  # 允许你的 GitHub Pages 页面访问
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ==================================================================================
 
 # ==================== 配置区 ====================
 UPSTREAM_API_URL = "https://api.apicore.ai/v1/images/generations"
