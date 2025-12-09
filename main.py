@@ -16,7 +16,7 @@ UPSTREAM_API_URL = "https://api.apicore.ai/v1/images/generations"
 UPSTREAM_MODEL = "doubao-seedream-4-0-250828"
 
 # 【重要】替换为你自己的主Key（你的收款凭证）
-MASTER_API_KEY = "sk-your-master-key-here"  # ⚠️ 换成你的真实充值码或自定义密钥
+MASTER_API_KEY = "sk-LbdPM8vmAzybGJkUJI5qR9Z82tyTICuLmtKF9evgi3cQa8DU"  # ⚠️ 换成你的真实充值码或自定义密钥
 
 # 用户数据库（示例：key → {剩余次数}）
 USER_DB = {
@@ -81,3 +81,4 @@ async def check_credits(req: Request):
 @app.get("/health")
 async def health():
     return {"status": "ok", "time": datetime.now().isoformat()}
+
