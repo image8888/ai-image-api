@@ -1,4 +1,4 @@
-# main.py - AI生图API（支持本地上传+以图生图）
+# main.py - AI生图API（支持本地上传+图文生成，OSS URL 修复版）
 from fastapi import FastAPI, Request, HTTPException, File, UploadFile
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +9,7 @@ from datetime import datetime
 
 app = FastAPI(
     title="ArtFlow AI 生图平台",
-    description="支持本地图片上传 + 实时生成",
+    description="支持本地图片上传 + 实时以图生图生成",
     version="1.0"
 )
 
@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ==================== OSS 配置（从环境变量读取）====================
+# ==================== OSS 初始化函数 ====================
 def get_oss_bucket():
     key_id = os.getenv("OSS_ACCESS_KEY_ID")
     key_secret = os.getenv("OSS_ACCESS_KEY_SECRET")
@@ -30,29 +30,35 @@ def get_oss_bucket():
     endpoint = os.getenv("OSS_ENDPOINT", "oss-cn-guangzhou.aliyuncs.com").replace("https://", "").replace("http://", "")
 
     if not key_id or not key_secret:
-        raise RuntimeError("❌ OSS密钥未设置，请检查Render环境变量")
+        raise RuntimeError("❌ OSS密钥未设置，请在Render环境变量中配置")
 
     auth = oss2.Auth(key_id, key_secret)
     return oss2.Bucket(auth, f"http://{endpoint}", bucket_name)
 
+# ==================== 接口1：上传到OSS ====================
 @app.post("/v1/upload/oss")
 async def upload_to_oss(file: UploadFile = File(...)):
     try:
+        # 读取文件
         content = await file.read()
         filename = file.filename.strip().replace(" ", "_")
         ext = os.path.splitext(filename)[1].lower()
 
+        # 校验格式
         if ext not in ['.jpg', '.jpeg', '.png', '.bmp', '.webp']:
-            raise HTTPException(status_code=400, detail="不支持的格式")
+            raise HTTPException(status_code=400, detail="不支持的图片格式")
 
+        # 存储路径
         date_str = datetime.now().strftime("%Y%m%d")
         oss_key = f"ai_gen_input/{date_str}/{filename}"
 
+        # 上传
         bucket = get_oss_bucket()
         bucket.put_object(oss_key, content)
 
-        public_url = f"https://{os.getenv('OSS_BUCKET_NAME')}.oss-{os.getenv('OSS_ENDPOINT').split('//')[1]}/{oss_key}"
-        
+        # ✅ 正确拼接公网可访问URL（关键修复）
+        public_url = f"https://{os.getenv('OSS_BUCKET_NAME')}.oss-cn-guangzhou.aliyuncs.com/{oss_key}"
+
         return {
             "url": public_url,
             "filename": filename,
@@ -63,7 +69,7 @@ async def upload_to_oss(file: UploadFile = File(...)):
     except Exception as e:
         return {"error": "上传失败", "detail": str(e)}
 
-# ==================== 图生图接口 ====================
+# ==================== 接口2：调用AI生成图片 ====================
 class GenerateRequest(BaseModel):
     prompt: str
     image_url: str
@@ -91,12 +97,13 @@ async def generate_image(data: GenerateRequest, request: Request):
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post("https://api.apicore.ai/v1/images/generations", json=payload, headers=headers)
+        
         if response.status_code == 200:
             return response.json()
         else:
             return {"error": "生成失败", "detail": response.text}
 
-# ==================== 查询额度 ====================
+# ==================== 接口3：查询额度（实时）====================
 @app.get("/v1/user/balance")
 async def get_user_balance(request: Request):
     api_key = request.headers.get("X-API-Key")
@@ -134,6 +141,7 @@ async def get_user_balance(request: Request):
             "currency_unit": "张"
         }
 
+# ==================== 健康检查 ====================
 @app.get("/health")
 async def health():
     return {"status": "ok"}
