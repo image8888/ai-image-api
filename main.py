@@ -17,7 +17,7 @@ UPSTREAM_API_URL = "https://api.apicore.ai/v1/images/generations"
 UPSTREAM_MODEL = "doubao-seedream-4-0-250828"
 
 # 【重要】换成你自己的充值码
-MASTER_API_KEY = "sk-your-real-key-here"  # ← 换成你的真实 sk-xxxx
+MASTER_API_KEY = "sk-LbdPM8vmAzybGJkUJI5qR9Z82tyTICuLmtKF9evgi3cQa8DU"  # ← 换成你的真实 sk-xxxx
 
 # 用户数据库（key → 剩余次数）
 USER_DB = {
@@ -87,3 +87,4 @@ def home():
         "docs": "/docs",
         "status": "ok"
     }
+
